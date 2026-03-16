@@ -8,11 +8,318 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ─── Auth ───────────────────────────────────────────────
+
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  name     String?
+  password String?
+  role     String  @default("user")
 }
+
+// ─── HR Module ──────────────────────────────────────────
+
+model Employee {
+  id                             Int      @id @default(autoincrement())
+  employeeCode                   String   @unique
+  firstName                      String
+  middleName                     String?
+  lastName                       String
+  fatherName                     String?
+  jobTitle                       String?
+  position                       String?
+  section                        String?
+  branch                         String?
+  manager                        String?
+  officePhone                    String?
+  extension                      String?
+  mobilePhone                    String?
+  homePhone                      String?
+  cnic                           String?
+  email                          String?
+  dhgabNo                        String?
+  idNo                           String?
+  externalEmployeeNo             String?
+
+  // Address
+  temporaryAddress               String?
+  permanentAddress               String?
+  district                       String?
+  city                           String?
+  zipCode                        String?
+  county                         String?
+  country                        String?
+  state                          String?
+  building                       String?
+
+  // Bank
+  bank                           String?
+  accountNumber                  String?
+  bankBranch                     String?
+
+  // Compensation
+  employeeType                   String?
+  grade                          String?
+  stage                          String?
+  employeeCosts                  Float?   @default(0)
+  gratuity                       Boolean  @default(false)
+  providentFund                  Boolean  @default(false)
+  eobi                           Boolean  @default(false)
+  openingTaxableAmount           Float?   @default(0)
+  taxPaid                        Float?   @default(0)
+  fuelLiters                     Float?   @default(0)
+
+  // Allowances
+  entertainmentAllowance         Float?   @default(0)
+  educationAllowance             Float?   @default(0)
+  bigCityAllowance               Float?   @default(0)
+  healthInsuranceAllocatedAmount Float?   @default(0)
+
+  // Deductions
+  healthInsuranceDeduction       Float?   @default(0)
+  messDeduction                  Float?   @default(0)
+
+  // Shift & Attendance
+  overTime                       Boolean  @default(false)
+  otLimitStart                   Float?   @default(60)
+  overtimeLimit                  Float?   @default(120)
+  shift                          String?  @default("Morning")
+  timeInRelaxation               Float?   @default(15)
+  timeOutRelaxation              Float?   @default(15)
+  timeInRelax                    Float?   @default(3)
+  timeOutRelax                   Float?   @default(3)
+  absentApplication              Boolean  @default(false)
+  lateInApplication              Float?   @default(0.25)
+  lateOutApplication             Float?   @default(0.25)
+
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+
+  // Relations
+  timesheets                     TimeSheet[]
+  familyDetails                  FamilyDetail[]
+  nextOfKins                     NextOfKin[]
+  finalSettlements               FinalSettlement[]
+  leaveApplications              LeaveApplication[]
+  taDas                          TaDa[]
+  deductions                     Deduction[]
+  loansAdvances                  LoanAdvance[]
+}
+
+model TimeSheet {
+  id         Int              @id @default(autoincrement())
+  tsType     String
+  code       String?
+  name       String?
+  firstName  String?
+  department String?
+  tsNo       Int?
+  dateFrom   DateTime?
+  dateTo     DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  employeeId Int?
+  employee   Employee?        @relation(fields: [employeeId], references: [id])
+  lines      TimeSheetLine[]
+}
+
+model TimeSheetLine {
+  id                Int       @id @default(autoincrement())
+  date              DateTime?
+  startTime         String?
+  endTime           String?
+  timeSheetActivity String?
+  workOrderNo       String?
+  financialProject  String?
+  costCenter        String?
+  stage             String?
+  labourItem        String?
+  serviceCallNo     String?
+  billable          Boolean   @default(false)
+
+  timeSheetId       Int
+  timeSheet         TimeSheet @relation(fields: [timeSheetId], references: [id], onDelete: Cascade)
+}
+
+model FamilyDetail {
+  id             Int                @id @default(autoincrement())
+  docEntry       Int?
+  docNum         String?
+  creator        String?
+  noOfChildren   Int?               @default(0)
+  remark         String?
+  employeeName   String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  employeeId     Int?
+  employee       Employee?          @relation(fields: [employeeId], references: [id])
+  lines          FamilyDetailLine[]
+}
+
+model FamilyDetailLine {
+  id             Int          @id @default(autoincrement())
+  lineId         String?
+  name           String?
+  relation       String?
+  dob            DateTime?
+  contactNo      String?
+
+  familyDetailId Int
+  familyDetail   FamilyDetail @relation(fields: [familyDetailId], references: [id], onDelete: Cascade)
+}
+
+model NextOfKin {
+  id             Int              @id @default(autoincrement())
+  docEntry       Int?
+  docNum         String?
+  remark         String?
+  employeeName   String?
+  noOfChildren   Int?             @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  employeeId     Int?
+  employee       Employee?        @relation(fields: [employeeId], references: [id])
+  lines          NextOfKinLine[]
+}
+
+model NextOfKinLine {
+  id          Int       @id @default(autoincrement())
+  lineId      String?
+  name        String?
+  relation    String?
+  contactNo   String?
+
+  nextOfKinId Int
+  nextOfKin   NextOfKin @relation(fields: [nextOfKinId], references: [id], onDelete: Cascade)
+}
+
+model FinalSettlement {
+  id             Int                    @id @default(autoincrement())
+  docEntry       Int?
+  docNum         String?
+  createDate     DateTime?
+  remark         String?
+  employeeName   String?
+  status         String                 @default("O")
+  creator        String?
+  employeeCode   String?
+  dhgabNo        String?
+  grade          String?
+  stage          String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  employeeId     Int?
+  employee       Employee?              @relation(fields: [employeeId], references: [id])
+  lines          FinalSettlementLine[]
+}
+
+model FinalSettlementLine {
+  id                Int             @id @default(autoincrement())
+  logInst           Int?
+  joiningDate       DateTime?
+  grossSalary       Float?          @default(0)
+  yearsOfService    Float?          @default(0)
+  gratuity          Float?          @default(0)
+
+  finalSettlementId Int
+  finalSettlement   FinalSettlement @relation(fields: [finalSettlementId], references: [id], onDelete: Cascade)
+}
+
+model LeaveApplication {
+  id               Int      @id @default(autoincrement())
+  leaveType        String
+  startDate        DateTime
+  endDate          DateTime
+  reason           String?
+  totalDays        Float?   @default(0)
+  status           String   @default("Pending")
+  approvedThisYear Int?     @default(0)
+  pendingApproval  Int?     @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  employeeId       Int?
+  employee         Employee? @relation(fields: [employeeId], references: [id])
+}
+
+model TaDa {
+  id              Int        @id @default(autoincrement())
+  docEntry        Int?
+  docNum          String?
+  status          String     @default("O")
+  creator         String?
+  createDate      DateTime?
+  remark          String?
+  employeeName    String?
+  designation     String?
+  grade           String?
+  location        String?
+  toLocation      String?
+  fromLocation    String?
+  reasonOfTravel  String?
+  phone           String?
+  department      String?
+  dhgabNo         String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  employeeId      Int?
+  employee        Employee?  @relation(fields: [employeeId], references: [id])
+  lines           TaDaLine[]
+}
+
+model TaDaLine {
+  id          Int      @id @default(autoincrement())
+  date        DateTime?
+  expenseType String?
+  amount      Float?   @default(0)
+  bill        Boolean  @default(false)
+
+  taDaId      Int
+  taDa        TaDa     @relation(fields: [taDaId], references: [id], onDelete: Cascade)
+}
+
+model Deduction {
+  id                Int      @id @default(autoincrement())
+  deductionType     String
+  adjustmentAmount  Float    @default(0)
+  approvalReference String?
+  date              DateTime?
+  status            String   @default("Manual")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  employeeId        Int?
+  employee          Employee? @relation(fields: [employeeId], references: [id])
+}
+
+model LoanAdvance {
+  id                   Int      @id @default(autoincrement())
+  supportCategory      String
+  principalAmount      Float    @default(0)
+  repaymentTenure      Int      @default(0)
+  interestRate         Float    @default(0)
+  monthlyInstallment   Float    @default(0)
+  justification        String?
+  outstandingBalance   Float?   @default(0)
+  totalInstallmentsPaid Int?    @default(0)
+  remainingTenure      Int?     @default(0)
+  endDate              DateTime?
+  status               String   @default("Pending")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  employeeId           Int?
+  employee             Employee? @relation(fields: [employeeId], references: [id])
+}
+
+// ─── Financial Module ───────────────────────────────────
+
 model ChartOfAccount {
   id             Int      @id @default(autoincrement())
   accountCode    String   @unique
@@ -21,13 +328,196 @@ model ChartOfAccount {
   category       String
   subCategory    String
   currency       String
-  openingBalance Float
-  targetBalance  Float
-  taxGroup       String
-  referenceNo    String
-  integrationKey String
-  reportingGroup String
+  openingBalance Float    @default(0)
+  targetBalance  Float    @default(0)
+  taxGroup       String?
+  referenceNo    String?
+  integrationKey String?
+  reportingGroup String?
   description    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model JournalEntry {
+  id              Int                @id @default(autoincrement())
+  postingDate     DateTime
+  documentDate    DateTime?
+  referenceNo     String?
+  externalDocNo   String?
+  generalRemarks  String?
+  journalType     String             @default("Standard")
+  currencyRate    Float              @default(1)
+  totalDebit      Float              @default(0)
+  totalCredit     Float              @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  lines           JournalEntryLine[]
+}
+
+model JournalEntryLine {
+  id             Int          @id @default(autoincrement())
+  account        String
+  debit          Float        @default(0)
+  credit         Float        @default(0)
+  taxCode        String?
+  costCenter     String?
+  lineMemo       String?
+  reference      String?
+
+  journalEntryId Int
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+}
+
+model BudgetSetup {
+  id              Int      @id @default(autoincrement())
+  fiscalYear      String
+  department      String
+  budgetAmount    Float    @default(0)
+  currency        String   @default("PKR")
+  allocationDate  DateTime?
+  revisionNumber  Int?     @default(0)
+  approvedBy      String?
+  strategicGoal   String?
+  priorityLevel   String   @default("Medium")
+  utilized        Float?   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FixedAsset {
+  id                 Int      @id @default(autoincrement())
+  assetName          String
+  assetCategory      String
+  serialNumber       String?
+  assetTagId         String?
+  modelNumber        String?
+  manufacturer       String?
+  purchaseDate       DateTime?
+  purchaseCost       Float    @default(0)
+  marketValue        Float?   @default(0)
+  depreciationMethod String   @default("Straight Line")
+  lifeSpan           Float?   @default(0)
+  salvageValue       Float?   @default(0)
+  location           String?
+  custodianName      String?
+  warrantyExpiry     DateTime?
+  serviceProvider    String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model CostCenter {
+  id              Int       @id @default(autoincrement())
+  costCenterCode  String    @unique
+  name            String
+  centerType      String
+  parentCenter    String?
+  manager         String?
+  functionalArea  String?
+  baseFactor      String?
+  allocationRate  Float?    @default(0)
+  surcharge       Float?    @default(0)
+  budgetCap       Float?    @default(0)
+  effectiveDate   DateTime?
+  expiryDate      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model PostingTemplate {
+  id              Int                    @id @default(autoincrement())
+  templateName    String
+  templateCode    String                 @unique
+  voucherType     String
+  automationMode  String                 @default("Manual Trigger")
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  lines           PostingTemplateLine[]
+}
+
+model PostingTemplateLine {
+  id                Int             @id @default(autoincrement())
+  glAccountCode     String
+  glAccountName     String?
+  side              String
+  amountFormula     String?
+  defaultMemo       String?
+
+  postingTemplateId Int
+  postingTemplate   PostingTemplate @relation(fields: [postingTemplateId], references: [id], onDelete: Cascade)
+}
+
+model RecurringPosting {
+  id                   Int                    @id @default(autoincrement())
+  agreementCode        String                 @unique
+  recurrenceFrequency  String
+  startDate            DateTime
+  nextExecution        DateTime?
+  endDate              DateTime?
+  transactionMode      String                 @default("Auto-Reversing")
+  status               String                 @default("Active")
+  totalExecutions      Int                    @default(0)
+  lastSuccessfulRun    DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  lines                RecurringPostingLine[]
+}
+
+model RecurringPostingLine {
+  id                 Int              @id @default(autoincrement())
+  glAccount          String
+  debitAmount        Float            @default(0)
+  creditAmount       Float            @default(0)
+  lineMemo           String?
+
+  recurringPostingId Int
+  recurringPosting   RecurringPosting @relation(fields: [recurringPostingId], references: [id], onDelete: Cascade)
+}
+
+model InternalReconciliation {
+  id              Int                     @id @default(autoincrement())
+  sourceAccount   String
+  targetAccount   String
+  status          String                  @default("Open")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  items           ReconciliationItem[]
+}
+
+model ReconciliationItem {
+  id               Int                    @id @default(autoincrement())
+  date             DateTime?
+  reference        String?
+  amount           Float                  @default(0)
+  side             String
+  selected         Boolean                @default(false)
+  type             String                 @default("source")
+
+  reconciliationId Int
+  reconciliation   InternalReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+}
+
+model PmsRate {
+  id                      Int       @id @default(autoincrement())
+  targetProperty          String
+  fiscalPeriod            String
+  effectiveDate           DateTime?
+  standardRackRate        Float     @default(0)
+  corporateNegotiatedRate Float     @default(0)
+  longTermLeaseRate       Float     @default(0)
+  dailyOperationalCost    Float     @default(0)
+  serviceChargeFixed      Float     @default(0)
+  municipalityFee         Float     @default(0)
+  seasonalPeakMarkup      Float     @default(0)
+  occupancyRate           Float?    @default(0)
+  avgDailyRate            Float?    @default(0)
+  revparIndex             Float?    @default(0)
+  taxVariance             Float?    @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 }
